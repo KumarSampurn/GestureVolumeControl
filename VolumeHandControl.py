@@ -26,20 +26,20 @@ devices = AudioUtilities.GetSpeakers()
 interface = devices.Activate(
     IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
 volume = cast(interface, POINTER(IAudioEndpointVolume))
-# volume.GetMute()
-# volume.GetMasterVolumeLevel()
+
 volRange=volume.GetVolumeRange()
-# volume.SetMasterVolumeLevel(0.0, None)
+
 minVol=volRange[0]
 maxVol=volRange[1]
 
-
+vol=0
+ymax=0
 while True:
     success,img = cap.read()
     img = cv2.flip(img, 1)
 
-    img=detector.findHands(img)
-    lmList=detector.findPosition(img)
+    img=detector.findHands(img,draw=False)
+    lmList=detector.findPosition(img, draw=False)
     if(len(lmList)):
         x1,y1=lmList[4][1],lmList[4][2]
         x2,y2=lmList[8][1],lmList[8][2]
@@ -51,17 +51,17 @@ while True:
         cv2.circle(img,(cx,cy),12,(255,0,255),cv2.FILLED)
         
         length =math.hypot(x2-x1,y2-y1)
-        # print(length)
-        #HandRange 15-220
-        #VolumeRange 65 -0
-        vol=np.interp(length,[30,200],[minVol,maxVol])
-        print((int)(vol+100))
+       
+        vol=np.interp(length,[50,200],[minVol,maxVol])
+        
         volume.SetMasterVolumeLevel(int(vol), None)
         
         if length<50:
             cv2.circle(img,(cx,cy),12,(0,255,0),cv2.FILLED)
-
-
+        cv2.rectangle(img,(40,260-int(vol)-100), (75,260),(0,255,0),-1)
+    cv2.putText(img,str((int)(vol+100))+"%",(40,120),cv2.FONT_HERSHEY_PLAIN,2,(0,255,0),3)     
+    cv2.rectangle(img,(40,160), (75,260),(0,255,0),2)
+    
     cTime=time.time()
     fps=1/(cTime-pTime)
     pTime=cTime
